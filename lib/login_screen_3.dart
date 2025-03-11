@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'login_bloc.dart';
 import 'login_state.dart';
 import 'main_screen/home_screen.dart';
-
+import 'login_screen.dart';
+import 'splash_screen.dart';
 
 class LoginScreen3 extends StatefulWidget {
   const LoginScreen3({super.key});
@@ -18,12 +19,12 @@ Color hexColor(String hex) {
 }
 
 class _LoginScreen3State extends State<LoginScreen3> {
-  void _navigateToHome(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
-  }
+void _navigateToHome(BuildContext context) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => SplashScreen(nextScreen: LoginScreen())),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,6 @@ class _LoginScreen3State extends State<LoginScreen3> {
         },
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => _navigateToHome(context),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(

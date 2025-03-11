@@ -38,7 +38,6 @@ class _LoginScreen1State extends State<LoginScreen1> {
         },
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => _navigateToHome(context),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Column(

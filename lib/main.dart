@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'login_bloc.dart';
-import 'login_screen.dart'; // Ensure this is the correct import
+import 'splash_screen.dart'; 
+import 'login_screen_1.dart'; // Ensure this import exists
 
 void main() {
   runApp(
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(), // Ensure this is wrapped in BlocProvider
+      home: const SplashScreen(nextScreen: LoginScreen1()), // Navigate to Login after Splash
     );
   }
 }

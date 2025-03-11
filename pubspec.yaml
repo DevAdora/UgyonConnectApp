@@ -30,6 +30,8 @@ flutter:
     - assets/images/ugyon_screen_image.png
     - assets/images/ugyon_secondscreen_image.png
     - assets/images/ugyon_thirdscreen_image.png
+    - assets/images/google_icon.png
+    - assets/images/google_icon.svg
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
