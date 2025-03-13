@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'main_screen/home_screen.dart';
 
 void main() {
   runApp(
@@ -6,9 +7,15 @@ void main() {
   );
 }
 
+void _navigateToMain(BuildContext context) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => HomeScreen()),
+  );
+}
+
 class SuccessScreen extends StatelessWidget {
   const SuccessScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,9 +51,7 @@ class SuccessScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to home screen or dashboard
-                    },
+                    onPressed: () => _navigateToMain(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9DC468),
                       foregroundColor: Colors.white,
@@ -55,7 +60,10 @@ class SuccessScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text("Continue to Ugyon", style: TextStyle(fontSize: 18)),
+                    child: const Text(
+                      "Continue to Ugyon",
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
                 ),
               ],

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'login_bloc.dart';
 import 'login_state.dart';
 import 'register_screen.dart';
+import 'main_screen/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,6 +13,13 @@ void _navigateToSignup(BuildContext context) {
   Navigator.pushReplacement(
     context,
     MaterialPageRoute(builder: (context) => const SignupScreen()),
+  );
+}
+
+void _navigateToMain(BuildContext context) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => HomeScreen()),
   );
 }
 
@@ -125,7 +133,7 @@ class LoginScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () => _navigateToMain(context),
                 child: const Text('Log in'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0XFF9DC468),

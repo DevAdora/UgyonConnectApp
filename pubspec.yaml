@@ -1,28 +1,29 @@
 name: ugyon
 description: "A new Flutter project."
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.0+1
 
 environment:
   sdk: ^3.7.0
 
-
 dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^8.1.3
-  pinput: ^3.0.1  # Add this for OTP input
-
+  pinput: ^3.0.1 # Add this for OTP input
+  google_fonts: ^6.1.0 # Use the latest version available
   cupertino_icons: ^1.0.8
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0 # For handling latitude/longitude
+  geolocator: ^11.0.0 # For getting user's location
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^5.0.0
-
 
 flutter:
   uses-material-design: true
@@ -33,6 +34,10 @@ flutter:
     - assets/images/ugyon_thirdscreen_image.png
     - assets/images/google_icon.png
     - assets/images/google_icon.svg
+    - assets/images/slide1_ugyon.png
+    - assets/images/slide2_jollibee.png
+    - assets/images/slide3.png
+    - assets/images/slide4.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
