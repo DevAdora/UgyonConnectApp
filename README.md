@@ -51,7 +51,11 @@ Ugyon Connect is a **Flutter & Firebase-powered** social media platform that enh
 1. **Clone the Repository:**  
    ```sh
    git clone https://github.com/yourusername/ugyon-connect.git
-   cd ugyon-connect
+   cd ugyon
 2. **Install Dependencies:**
    ```sh
    npm install requirement.txt
+3 **Running setup.sh**
+    ```sh
+    chmod +x setup.sh
+    ./setup.sh
