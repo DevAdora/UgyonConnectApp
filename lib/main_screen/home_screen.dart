@@ -9,6 +9,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(debugShowCheckedModeBanner: false, home: HomeScreen());
@@ -16,6 +18,8 @@ class MyApp extends StatelessWidget {
 }
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -37,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_selectedIndex], // Show selected page
@@ -91,6 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ✅ Home Page
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -235,7 +242,7 @@ Widget _buildRewardsSection() {
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, fontFamily: 'Inter', letterSpacing: -0.32),
       ),
       SizedBox(height: 20),
-      Container(
+      SizedBox(
         height: 150,
         child: ListView(
           scrollDirection: Axis.horizontal,
@@ -314,6 +321,8 @@ Widget _buildRewardCard(String title, String points, String imagePath) {
 }
 
 class MapPage extends StatelessWidget {
+  const MapPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -324,6 +333,8 @@ class MapPage extends StatelessWidget {
 }
 
 class ScannerPage extends StatelessWidget {
+  const ScannerPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -335,6 +346,8 @@ class ScannerPage extends StatelessWidget {
 
 // ✅ Rewards Page
 class RewardsPage extends StatelessWidget {
+  const RewardsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -346,6 +359,8 @@ class RewardsPage extends StatelessWidget {
 
 // ✅ Profile Page
 class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -356,6 +371,8 @@ class ProfilePage extends StatelessWidget {
 }
 
 class NearbyMap extends StatefulWidget {
+  const NearbyMap({super.key});
+
   @override
   _NearbyMapState createState() => _NearbyMapState();
 }

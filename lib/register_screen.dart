@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'email_verification.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(
     const MaterialApp(debugShowCheckedModeBanner: false, home: SignupScreen()),
-  );
-}
-
-void _navigateToEmailVer(BuildContext context) {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => const OtpScreen()),
   );
 }
 
@@ -22,7 +20,54 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  bool _isPasswordHidden = true; // Password visibility state
+  bool _isPasswordHidden = true;
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+  // Controllers for input fields
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _registerUser() async {
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _phoneController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    try {
+      // ✅ Firebase Auth to create a new user
+      final credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text,
+            password: _passwordController.text,
+          );
+
+      // ✅ Send email verification
+      await credential.user?.sendEmailVerification();
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Verification email sent!')));
+
+      // ✅ Navigate to the OTP screen with email
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtpScreen(email: _emailController.text),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +76,8 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceEvenly, // Evenly distribute sections
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              // 🔹 Top Section: Title & Subtitle
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -61,28 +104,29 @@ class _SignupScreenState extends State<SignupScreen> {
                   ],
                 ),
               ),
-
-              // 🔹 Middle Section: Input Fields
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildTextField("Full Name", Icons.person),
+                    _buildTextField("Full Name", Icons.person, _nameController),
                     const SizedBox(height: 12),
-                    _buildTextField("Work email", Icons.work),
+                    _buildTextField("Work email", Icons.work, _emailController),
                     const SizedBox(height: 12),
-                    _buildTextField("Phone number", Icons.phone),
+                    _buildTextField(
+                      "Phone number",
+                      Icons.phone,
+                      _phoneController,
+                    ),
                     const SizedBox(height: 12),
                     _buildTextField(
                       "Strong password",
                       Icons.lock,
+                      _passwordController,
                       isPassword: true,
                     ),
                   ],
                 ),
               ),
-
-              // 🔹 Bottom Section: Button
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -114,18 +158,13 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-
                     const SizedBox(height: 20),
-
-                    // "Next" Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => _navigateToEmailVer(context),
+                        onPressed: _registerUser,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(
-                            0xFF8BC34A,
-                          ), // Light green
+                          backgroundColor: const Color(0xFF8BC34A),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
@@ -150,12 +189,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _buildTextField(
     String hintText,
-    IconData icon, {
+    IconData icon,
+    TextEditingController controller, {
     bool isPassword = false,
   }) {
     return SizedBox(
-      width: double.infinity, // Ensures fields are centered
+      width: double.infinity,
       child: TextField(
+        controller: controller,
         obscureText: isPassword ? _isPasswordHidden : false,
         decoration: InputDecoration(
           labelText: hintText,

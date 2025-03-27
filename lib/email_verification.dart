@@ -1,22 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart'; // For OTP input
-import 'number_verification.dart'; // Import the NumberVerification screen
-
-void main() {
-  runApp(
-    const MaterialApp(debugShowCheckedModeBanner: false, home: OtpScreen()),
-  );
-}
-
-void _navigateToNumVer(BuildContext context) {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => const NumScreen()),
-  );
-}
+import 'number_verification.dart'; // Import the next screen
 
 class OtpScreen extends StatefulWidget {
-  const OtpScreen({super.key});
+  final String email; // ✅ Add the email parameter
+
+  const OtpScreen({super.key, required this.email}); // ✅ Update the constructor
 
   @override
   _OtpScreenState createState() => _OtpScreenState();
@@ -68,13 +57,15 @@ class _OtpScreenState extends State<OtpScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    "Enter the 6-digit code sent to your email: ",
+                    "Enter the 6-digit code sent to your email:",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, color: Color(0xFF505050)),
                   ),
-                  const Text(
-                    "yourname@email.com",
-                    style: TextStyle(
+
+                  // ✅ Display the dynamically passed email
+                  Text(
+                    widget.email, // ✅ Display the email dynamically
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Color(0xFF9DC468),
                       fontWeight: FontWeight.bold,
@@ -105,7 +96,14 @@ class _OtpScreenState extends State<OtpScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => _navigateToNumVer(context),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NumScreen(),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8BC34A),
                     foregroundColor: Colors.white,
@@ -117,7 +115,29 @@ class _OtpScreenState extends State<OtpScreen> {
                   child: const Text("Verify", style: TextStyle(fontSize: 18)),
                 ),
               ),
-
+              Column(
+                children: [
+                  const Text(
+                    "A verification link has been sent to:",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
+                  Text(
+                    widget.email,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Please check your email and click the verification link to continue.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.black45),
+                  ),
+                ],
+              ),
               // 🔹 Resend & Warning Text
               Column(
                 children: [

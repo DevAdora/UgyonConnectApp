@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'login_bloc.dart';
 import 'login_state.dart';
 import 'login_screen_3.dart';
-import 'main_screen/home_screen.dart';
 
 class LoginScreen2 extends StatefulWidget {
   const LoginScreen2({super.key});

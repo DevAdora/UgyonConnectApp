@@ -1,38 +1,95 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'login_bloc.dart';
-import 'login_state.dart';
-import 'register_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'main_screen/home_screen.dart';
+import 'register_screen.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-void _navigateToSignup(BuildContext context) {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => const SignupScreen()),
-  );
-}
-
-void _navigateToMain(BuildContext context) {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => HomeScreen()),
-  );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: LoginScreen());
-  }
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class LoginScreen extends StatelessWidget {
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false; // To show loading indicator
+
+  // ✅ Firestore Authentication Function
+  Future<void> _signInWithRealtimeDB() async {
+    setState(() => _isLoading = true);
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter both email and password')),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      // ✅ Reference to the Realtime Database users collection
+      final DatabaseReference dbRef = FirebaseDatabase.instance.ref('users');
+
+      // 🔥 Query the database to find matching email
+      final snapshot = await dbRef.orderByChild('email').equalTo(email).get();
+
+      if (snapshot.exists && snapshot.value != null) {
+        // ✅ Iterate through the results
+        final Map<dynamic, dynamic> usersMap =
+            snapshot.value as Map<dynamic, dynamic>;
+        bool isAuthenticated = false;
+
+        usersMap.forEach((key, value) {
+          if (value['password'] == password) {
+            isAuthenticated = true;
+          }
+        });
+
+        if (isAuthenticated) {
+          // ✅ Successful login
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+
+          // Navigate to HomeScreen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
+        } else {
+          // ❌ Incorrect password
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Invalid password')));
+        }
+      } else {
+        // ❌ Email not found
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No user found with this email')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _navigateToSignup(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const SignupScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,6 +152,7 @@ class LoginScreen extends StatelessWidget {
             ),
             const SizedBox(height: 15),
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(
@@ -104,6 +162,7 @@ class LoginScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             TextField(
+              controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -130,21 +189,26 @@ class LoginScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
+            // 🔥 Login Button with Loading Indicator
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _navigateToMain(context),
-                child: const Text('Log in'),
+                onPressed: _isLoading ? null : _signInWithRealtimeDB,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0XFF9DC468),
+                  backgroundColor: const Color(0XFF9DC468),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
+                child:
+                    _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Log in'),
               ),
             ),
+
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
