@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'transaction_screen.dart'; // ✅ Import TransactionPage
+import 'package:qr_flutter/qr_flutter.dart';
 
 void main() {
   runApp(MyApp());
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
     HomePage(),
     MapPage(), // ✅ Navigates properly
     ScannerPage(), // ✅ Navigates properly
-    RewardsPage(),
+    TransactionPage(),
     ProfilePage(),
   ];
 
@@ -41,52 +42,116 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Updated bottomNavigationBar in your _HomeScreenState class
+  // Updated bottomNavigationBar in your _HomeScreenState class
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_selectedIndex], // Show selected page
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Color(0XFF9DC468),
-        unselectedItemColor: Color(0xFF505050),
-        showSelectedLabels: false, // ❌ Removes text labels
-        showUnselectedLabels: false, // ❌ Removes text labels
-        items: [
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Icon(Icons.home),
+      bottomNavigationBar: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          // Regular bottom navigation bar with increased height
+          Container(
+            height: 80, // Increased height to accommodate overflow
+            padding: EdgeInsets.only(bottom: 8), // Bottom padding
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: Offset(0, -1),
+                ),
+              ],
             ),
-            label: "",
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(child: _buildNavItem(0, Icons.home, "Home")),
+                Expanded(child: _buildNavItem(1, Icons.shopping_bag, "Shop")),
+                // Empty space for center item
+                Expanded(child: SizedBox(width: 10)),
+                Expanded(
+                  child: _buildNavItem(
+                    3,
+                    Icons.article_outlined,
+                    "Transactions",
+                  ),
+                ),
+                Expanded(
+                  child: _buildNavItem(4, Icons.person_outline, "Profile"),
+                ),
+              ],
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Icon(Icons.map),
+
+          // Prominent QR button
+          Positioned(
+            top: -15, // Reduced overlap to prevent overflow
+            child: GestureDetector(
+              onTap: () => _onItemTapped(2),
+              child: Container(
+                width: 56, // Slightly smaller
+                height: 56, // Slightly smaller
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Color(0xFF9DC468), width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.grid_view, color: Color(0xFF9DC468), size: 28),
+                    SizedBox(height: 2),
+                    Text(
+                      "Your QR",
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: Color(0xFF505050),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            label: "",
           ),
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Icon(Icons.scanner),
-            ),
-            label: "",
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    bool isSelected = _selectedIndex == index;
+
+    return InkWell(
+      onTap: () => _onItemTapped(index),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 24,
+            color: isSelected ? Color(0xFF9DC468) : Color(0xFF505050),
           ),
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Icon(Icons.shopping_bag),
+          SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11, // Slightly smaller font
+              color: isSelected ? Color(0xFF9DC468) : Color(0xFF505050),
+              fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
             ),
-            label: "",
-          ),
-          BottomNavigationBarItem(
-            icon: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Icon(Icons.person),
-            ),
-            label: "",
           ),
         ],
       ),
@@ -218,7 +283,12 @@ Widget _buildNearbyStation() {
     children: [
       Text(
         "Nearby Station",
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, fontFamily: 'Inter', letterSpacing: -0.32),
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          fontFamily: 'Inter',
+          letterSpacing: -0.32,
+        ),
       ),
       SizedBox(height: 20),
       Container(
@@ -239,7 +309,12 @@ Widget _buildRewardsSection() {
     children: [
       Text(
         "Rewards",
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, fontFamily: 'Inter', letterSpacing: -0.32),
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          fontFamily: 'Inter',
+          letterSpacing: -0.32,
+        ),
       ),
       SizedBox(height: 20),
       SizedBox(
@@ -291,7 +366,7 @@ Widget _buildRewardCard(String title, String points, String imagePath) {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end, 
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Text(
             title,
@@ -332,27 +407,218 @@ class MapPage extends StatelessWidget {
   }
 }
 
-class ScannerPage extends StatelessWidget {
+`class ScannerPage extends StatelessWidget {
   const ScannerPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Scanner")),
-      body: Center(child: Text("Scanner Page", style: TextStyle(fontSize: 22))),
+      backgroundColor: Color(0xFFF2F2F2), // Light background color
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Card container for QR code
+            Expanded(
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.85,
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF9DC468), // Green background
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Back button and title row
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              // Handle back button press if needed
+                            },
+                            child: Icon(Icons.arrow_back, color: Colors.white),
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'My QR',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // Profile picture
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: ClipOval(
+                          child: Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 12),
+
+                      // Name
+                      Text(
+                        'Japheth G. Gonzales',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+
+                      SizedBox(height: 24),
+
+                      // QR Code
+                      Container(
+                        width: 200,
+                        height: 200,
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: QrImageView(
+                          data: 'https://example.com/user/japheth_g_gonzales',
+                          version: QrVersions.auto,
+                          backgroundColor: Colors.white,
+                          size: 180,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-// ✅ Rewards Page
-class RewardsPage extends StatelessWidget {
-  const RewardsPage({super.key});
+class TransactionPage extends StatelessWidget {
+  const TransactionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Rewards")),
-      body: Center(child: Text("Rewards Page", style: TextStyle(fontSize: 22))),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Transaction History',
+          style: TextStyle(color: Colors.black),
+        ),
+        actions: const [
+          Icon(Icons.notifications, color: Colors.grey),
+          SizedBox(width: 16),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: const [
+          TransactionCard(date: '01', month: 'April'),
+          TransactionCard(date: '29', month: 'March'),
+          TransactionCard(date: '01', month: 'April'),
+          TransactionCard(date: '29', month: 'March'),
+          TransactionCard(date: '24', month: 'March'),
+          TransactionCard(date: '20', month: 'March'),
+          TransactionCard(date: '16', month: 'March'),
+        ],
+      ),
+    );
+  }
+}
+
+class TransactionCard extends StatelessWidget {
+  final String date;
+  final String month;
+
+  const TransactionCard({super.key, required this.date, required this.month});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              width: 75,
+              height: 75,
+              decoration: BoxDecoration(
+                color: Color(0xFF9DC468),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    date,
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF51840A),
+                    ),
+                  ),
+                  Text(
+                    month,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF505050),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Bottles: 2 Small, 3 Medium, 1 Large',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Points Earned: 15 pts',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  Text(
+                    'CO₂ Saved: 0.3 kg',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Status: Completed',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF9DC468)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -364,8 +630,170 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Profile")),
-      body: Center(child: Text("Profile Page", style: TextStyle(fontSize: 22))),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Profile header with avatar and name
+            Padding(
+              padding: const EdgeInsets.only(top: 30.0, bottom: 20.0),
+              child: Column(
+                children: [
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: 25,
+                        height: 25,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Japheth G. Gonzales',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Settings container
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  children: [
+                    _buildSettingsItem(
+                      icon: Icons.edit,
+                      title: 'Edit Profile Name',
+                      context: context,
+                    ),
+                    _buildDivider(),
+                    _buildSettingsItem(
+                      icon: Icons.lock,
+                      title: 'Change Password',
+                      context: context,
+                    ),
+                    _buildDivider(),
+                    _buildSettingsItem(
+                      icon: Icons.email,
+                      title: 'Change Email Address',
+                      context: context,
+                    ),
+                    _buildDivider(),
+                    _buildSettingsItem(
+                      icon: Icons.settings,
+                      title: 'Settings',
+                      context: context,
+                    ),
+                    _buildDivider(),
+                    _buildSettingsItem(
+                      icon: Icons.logout,
+                      title: 'Logout',
+                      isLogout: true,
+                      context: context,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const Spacer(),
+
+            // Bottom navigation bar
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsItem({
+    required IconData icon,
+    required String title,
+    bool isLogout = false,
+    required BuildContext context,
+  }) {
+    return InkWell(
+      onTap: () {
+        // Handle tap
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color:
+                    isLogout
+                        ? Colors.red.withOpacity(0.1)
+                        : Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: isLogout ? Colors.red : Colors.black,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                color: isLogout ? Colors.red : Colors.black,
+              ),
+            ),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, size: 15, color: Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      indent: 16,
+      endIndent: 16,
+      color: Color(0xFFEEEEEE),
     );
   }
 }

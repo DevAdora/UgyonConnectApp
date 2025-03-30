@@ -23,7 +23,7 @@ dependencies:
   cloud_firestore: ^4.15.3    # Firestore (example)
   firebase_storage: ^11.6.5   # Storage (optional)
   firebase_database: ^10.4.5
-
+  qr_flutter: ^4.1.0 # For QR code generation
   
 dev_dependencies:
   flutter_test:
