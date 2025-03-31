@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'transaction_screen.dart'; // ✅ Import TransactionPage
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../login_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() {
   runApp(MyApp());
@@ -25,29 +28,55 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
+String _userName = "";
+String _userEmail = "";
+String _userId = "";
+// Get first name for personalized greeting
+String get _firstName {
+  return _userName.isEmpty ? "User" : _userName.split(' ').first;
+}
+
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
-  final List<Widget> _pages = [
-    HomePage(),
-    MapPage(), // ✅ Navigates properly
-    ScannerPage(), // ✅ Navigates properly
-    TransactionPage(),
-    ProfilePage(),
-  ];
+  Map<String, dynamic>? _userData;
+  bool _isLoading = true;
 
-  void _onItemTapped(int index) {
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserDetailsFromPrefs();
+  }
+
+  Future<void> _fetchUserDetailsFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _selectedIndex = index;
+      _userId = prefs.getString('userId') ?? '';
+      _userEmail = prefs.getString('userEmail') ?? '';
+      _userName = prefs.getString('userName') ?? 'User';
+      _isLoading = false;
     });
   }
 
-  // Updated bottomNavigationBar in your _HomeScreenState class
-  // Updated bottomNavigationBar in your _HomeScreenState class
   @override
   Widget build(BuildContext context) {
+    // Create pages list inside build to pass the current user data
+    final List<Widget> _pages = [
+      HomePage(userName: _firstName),
+      ShopPage(),
+      ScannerPage(userName: _userName, userId: _userId, userEmail: _userEmail),
+      TransactionPage(),
+      ProfilePage(userName: _userName, userId: _userId, userEmail: _userEmail),
+    ];
+
     return Scaffold(
-      body: _pages[_selectedIndex], // Show selected page
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF9DC468)),
+              )
+              : _pages[_selectedIndex], // Show selected page
       bottomNavigationBar: Stack(
         alignment: Alignment.center,
         clipBehavior: Clip.none,
@@ -89,45 +118,56 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Prominent QR button
           Positioned(
-            top: -15, // Reduced overlap to prevent overflow
+            top: -25, // Adjust as needed
             child: GestureDetector(
               onTap: () => _onItemTapped(2),
-              child: Container(
-                width: 56, // Slightly smaller
-                height: 56, // Slightly smaller
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Color(0xFF9DC468), width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      spreadRadius: 1,
+              child: Column(
+                children: [
+                  // The circle container with the icon only
+                  Container(
+                    width: 65,
+                    height: 65,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Color(0xFF9DC468), width: 1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.grid_view, color: Color(0xFF9DC468), size: 28),
-                    SizedBox(height: 2),
-                    Text(
-                      "Your QR",
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: Color(0xFF505050),
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Icon(
+                      Icons.grid_view,
+                      color: Color(0xFF9DC468),
+                      size: 28,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Text displayed outside of the circle
+                  Text(
+                    "Your QR",
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Color(0xFF505050),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   Widget _buildNavItem(int index, IconData icon, String label) {
@@ -159,35 +199,34 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ✅ Home Page
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final String userName;
+
+  const HomePage({super.key, required this.userName});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // ✅ Fixed 'appBar' property
         backgroundColor: Colors.white,
         elevation: 0,
         title: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.account_circle,
               color: Color(0XFF9DC468),
               size: 26,
-            ), // Profile Icon
-            SizedBox(width: 8), // Space between icon and text
+            ),
+            const SizedBox(width: 8),
             RichText(
               text: TextSpan(
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 22,
-
                   fontWeight: FontWeight.bold,
-                  color: Colors.black, // Default color
+                  color: Colors.black,
                 ),
                 children: [
-                  TextSpan(
+                  const TextSpan(
                     text: "Hello, ",
                     style: TextStyle(
                       color: Colors.black,
@@ -197,8 +236,8 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: "Japheth", // Green-colored name
-                    style: TextStyle(
+                    text: _firstName, // Using the passed userName
+                    style: const TextStyle(
                       color: Color(0xFF9DC468),
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
@@ -212,206 +251,284 @@ class HomePage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications, color: Colors.black),
+            icon: const Icon(Icons.notifications, color: Colors.black),
             onPressed: () {},
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.only(
+          top: 20,
+          left: 16,
+          right: 16,
+          bottom: 16,
+        ), // Top padding added here
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildStatsSection(),
-            SizedBox(height: 20),
-            _buildNearbyStation(),
-            SizedBox(height: 20),
+            const SizedBox(height: 30),
+            _buildCard(),
+            const SizedBox(height: 30),
             _buildRewardsSection(),
           ],
         ),
       ),
     );
   }
-}
 
-Widget _buildStatsSection() {
-  return Container(
-    padding: EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Color(0xFF9DC468),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildStatsSection() {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF9DC468),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _buildStatItem("My Points", "50.2"),
+          _buildStatItem("Saved CO₂", "50.2g"),
+          _buildStatItem("Recycled bottle", "50.2"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String title, String value) {
+    return Column(
       children: [
-        _buildStatItem("My Points", "50.2"),
-        _buildStatItem("Saved CO₂", "50.2g"),
-        _buildStatItem("Recycled bottle", "50.2"),
+        Text(
+          value,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 32,
+            color: Color(0xFFFFEA9C),
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        Text(
+          title,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFFFDFDFD),
+          ),
+        ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildStatItem(String title, String value) {
-  return Column(
-    children: [
-      Text(
-        value,
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 32,
-          color: Color(0xFFFFEA9C),
-          fontWeight: FontWeight.w400,
+  Widget _buildCard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Cards",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            fontFamily: 'Inter',
+            letterSpacing: -0.32,
+          ),
         ),
-      ),
-      Text(
-        title,
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFFFDFDFD),
+        SizedBox(height: 20),
+        SizedBox(
+          height: 180,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _buildCardStation(
+                "Apply for Your Ugyon Card Now!",
+                "Enjoy seamless recycling rewards and exclusive perks",
+                [
+                  Color(0xFFFDFDFD), // Darker Green
+                  Color(0xFFCBE9A3), // Darker Green
+                ],
+              ),
+              _buildCardStation(
+                "Your Recycling Impact",
+                "CO₂ Saved: Track your environmental impact.",
+                [
+                  Color(0xFFFDFDFD), // Darker Green
+                  Color(0xFFCBE9A3), // Darker Green
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
-Widget _buildNearbyStation() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        "Nearby Station",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          fontFamily: 'Inter',
-          letterSpacing: -0.32,
+  Widget _buildCardStation(
+    String title,
+    String points,
+    List<Color> gradientColors,
+  ) {
+    return Container(
+      width: 180,
+      margin: EdgeInsets.only(right: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
-      SizedBox(height: 20),
-      Container(
-        height: 250,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: NearbyMap(),
-      ),
-    ],
-  );
-}
-
-Widget _buildRewardsSection() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        "Rewards",
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          fontFamily: 'Inter',
-          letterSpacing: -0.32,
-        ),
-      ),
-      SizedBox(height: 20),
-      SizedBox(
-        height: 150,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
+      child: Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildRewardCard(
-              "Donate To Ugyon",
-              "1pt",
-              "assets/images/slide1_ugyon.png",
+            Text(
+              title,
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: Color(0xFF000000),
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
             ),
-            _buildRewardCard(
-              "Jollibee Burger Meals",
-              "100pts",
-              "assets/images/slide2_jollibee.png",
-            ),
-            _buildRewardCard(
-              "Gift Voucher",
-              "60pts",
-              "assets/images/slide3.png",
+            SizedBox(height: 2.5),
+            Text(
+              points,
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                fontSize: 12,
+                fontFamily: 'Inter',
+                color: Color(0xFF505050),
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ],
         ),
       ),
-    ],
-  );
-}
+    );
+  }
 
-Widget _buildRewardCard(String title, String points, String imagePath) {
-  return Container(
-    width: 150,
-    margin: EdgeInsets.only(right: 10),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
-      image: DecorationImage(
-        image: AssetImage(imagePath), // ✅ Uses different image for each card
-        fit: BoxFit.cover, // ✅ Ensures the image fills the container
-      ),
-    ),
-    child: Container(
-      padding: EdgeInsets.all(10),
+  Widget _buildRewardsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Rewards",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            fontFamily: 'Inter',
+            letterSpacing: -0.32,
+          ),
+        ),
+        SizedBox(height: 20),
+        SizedBox(
+          height: 150,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _buildRewardCard(
+                "Donate To Ugyon",
+                "1pt",
+                "assets/images/slide1_ugyon.png",
+              ),
+              _buildRewardCard(
+                "Jollibee Burger Meals",
+                "100pts",
+                "assets/images/slide2_jollibee.png",
+              ),
+              _buildRewardCard(
+                "Gift Voucher",
+                "60pts",
+                "assets/images/slide3.png",
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRewardCard(String title, String points, String imagePath) {
+    return Container(
+      width: 150,
+      margin: EdgeInsets.only(right: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(
-          0.4,
-        ), // ✅ Adds slight overlay for text visibility
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.start,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              color: Color(0xFFFDFDFD),
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
+      child: Container(
+        padding: EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              title,
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: Color(0xFFFDFDFD),
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
             ),
-          ),
-          SizedBox(height: 2.5),
-          Text(
-            points,
-            textAlign: TextAlign.start,
-            style: TextStyle(
-              fontSize: 14,
-              fontFamily: 'Inter',
-              color: Color(0xFFFDFDFD),
-              fontWeight: FontWeight.w700,
+            SizedBox(height: 2.5),
+            Text(
+              points,
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                fontSize: 14,
+                fontFamily: 'Inter',
+                color: Color(0xFFFDFDFD),
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
-
-class MapPage extends StatelessWidget {
-  const MapPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Map")),
-      body: Center(child: Text("Map Page", style: TextStyle(fontSize: 22))),
     );
   }
 }
 
-`class ScannerPage extends StatelessWidget {
-  const ScannerPage({super.key});
+class ShopPage extends StatelessWidget {
+  const ShopPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Shop")),
+      body: Center(child: Text("Shop Page", style: TextStyle(fontSize: 22))),
+    );
+  }
+}
+
+// Updated ScannerPage to use dynamic user data
+class ScannerPage extends StatelessWidget {
+  final String userName;
+  final String userId;
+  final String userEmail;
+
+  const ScannerPage({
+    super.key,
+    required this.userName,
+    required this.userId,
+    required this.userEmail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Generate a unique QR code data string using the user's ID
+    final String qrData = 'https://example.com/user/$userId';
+
     return Scaffold(
       backgroundColor: Color(0xFFF2F2F2), // Light background color
       body: SafeArea(
@@ -472,9 +589,9 @@ class MapPage extends StatelessWidget {
 
                       SizedBox(height: 12),
 
-                      // Name
+                      // Name - dynamically display the userName
                       Text(
-                        'Japheth G. Gonzales',
+                        userName.isNotEmpty ? userName : 'User',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -482,9 +599,21 @@ class MapPage extends StatelessWidget {
                         ),
                       ),
 
+                      SizedBox(height: 6),
+
+                      // Email - dynamically display the userEmail
+                      Text(
+                        userEmail,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ),
+
                       SizedBox(height: 24),
 
-                      // QR Code
+                      // QR Code - use the dynamic qrData
                       Container(
                         width: 200,
                         height: 200,
@@ -494,10 +623,22 @@ class MapPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: QrImageView(
-                          data: 'https://example.com/user/japheth_g_gonzales',
+                          data: qrData,
                           version: QrVersions.auto,
                           backgroundColor: Colors.white,
                           size: 180,
+                        ),
+                      ),
+
+                      SizedBox(height: 12),
+
+                      // Display user ID
+                      Text(
+                        'ID: ${userId.length > 8 ? userId.substring(0, 8) + '...' : userId}',
+
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.8),
                         ),
                       ),
                     ],
@@ -623,69 +764,27 @@ class TransactionCard extends StatelessWidget {
   }
 }
 
-// ✅ Profile Page
+// Updated ProfilePage to use dynamic user data
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final String userName;
+  final String userId;
+  final String userEmail;
 
+  const ProfilePage({
+    super.key,
+    required this.userName,
+    required this.userId,
+    required this.userEmail,
+  });
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF9DC468),
       body: SafeArea(
         child: Column(
           children: [
-            // Profile header with avatar and name
-            Padding(
-              padding: const EdgeInsets.only(top: 30.0, bottom: 20.0),
-              child: Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.person,
-                            size: 50,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        width: 25,
-                        height: 25,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 15,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Japheth G. Gonzales',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Profile header
+            _buildProfileHeader(context),
 
             // Settings container
             Padding(
@@ -693,7 +792,7 @@ class ProfilePage extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   children: [
@@ -701,24 +800,29 @@ class ProfilePage extends StatelessWidget {
                       icon: Icons.edit,
                       title: 'Edit Profile Name',
                       context: context,
+                      onTap: () => _showEditModal(context, "Edit Profile Name"),
                     ),
                     _buildDivider(),
                     _buildSettingsItem(
                       icon: Icons.lock,
                       title: 'Change Password',
                       context: context,
+                      onTap: () => _showEditModal(context, "Change Password"),
                     ),
                     _buildDivider(),
                     _buildSettingsItem(
                       icon: Icons.email,
                       title: 'Change Email Address',
                       context: context,
+                      onTap:
+                          () => _showEditModal(context, "Change Email Address"),
                     ),
                     _buildDivider(),
                     _buildSettingsItem(
                       icon: Icons.settings,
                       title: 'Settings',
                       context: context,
+                      onTap: () => _showPlaceholder(context),
                     ),
                     _buildDivider(),
                     _buildSettingsItem(
@@ -726,137 +830,226 @@ class ProfilePage extends StatelessWidget {
                       title: 'Logout',
                       isLogout: true,
                       context: context,
+                      onTap: () => _logout(context),
                     ),
                   ],
                 ),
               ),
             ),
-
             const Spacer(),
-
-            // Bottom navigation bar
           ],
         ),
       ),
     );
   }
 
+  /// ✅ Profile Header Function
+  Widget _buildProfileHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 40.0, bottom: 20.0),
+      child: Column(
+        children: [
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(Icons.person, size: 50, color: Colors.black),
+                ),
+              ),
+              Container(
+                width: 25,
+                height: 25,
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: Center(
+                  child: Icon(Icons.check, color: Colors.white, size: 15),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            userName.isNotEmpty ? userName : 'User',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            userEmail,
+            style: TextStyle(fontSize: 16, color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ✅ Settings Item Function
   Widget _buildSettingsItem({
     required IconData icon,
     required String title,
-    bool isLogout = false,
     required BuildContext context,
+    bool isLogout = false,
+    required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: () {
-        // Handle tap
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color:
-                    isLogout
-                        ? Colors.red.withOpacity(0.1)
-                        : Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: isLogout ? Colors.red : Colors.black,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                color: isLogout ? Colors.red : Colors.black,
-              ),
-            ),
-            const Spacer(),
-            Icon(Icons.arrow_forward_ios, size: 15, color: Colors.grey),
-          ],
+    return ListTile(
+      leading: Icon(icon, color: isLogout ? Colors.red : Colors.black),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isLogout ? Colors.red : Colors.black,
+          fontSize: 16,
         ),
       ),
+      trailing: Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
     );
   }
 
+  /// ✅ Divider Function
   Widget _buildDivider() {
-    return const Divider(
-      height: 1,
+    return Divider(
+      color: Colors.grey[300],
       thickness: 1,
+      height: 0,
       indent: 16,
       endIndent: 16,
-      color: Color(0xFFEEEEEE),
     );
   }
-}
 
-class NearbyMap extends StatefulWidget {
-  const NearbyMap({super.key});
-
-  @override
-  _NearbyMapState createState() => _NearbyMapState();
-}
-
-class _NearbyMapState extends State<NearbyMap> {
-  LatLng _userLocation = LatLng(37.7749, -122.4194); // Default: San Francisco
-
-  @override
-  void initState() {
-    super.initState();
-    _getUserLocation();
+  /// ✅ Logout Function
+  void _logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      // Navigate to the login screen
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      print("Error logging out: $e");
+    }
   }
 
-  Future<void> _getUserLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return;
-    }
+  /// ✅ Modal Function for Edit Profile, Password, and Email
+  void _showEditModal(BuildContext context, String title) {
+    TextEditingController _controller = TextEditingController();
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.deniedForever) {
-        return;
-      }
-    }
-
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    setState(() {
-      _userLocation = LatLng(position.latitude, position.longitude);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FlutterMap(
-      options: MapOptions(initialCenter: _userLocation, initialZoom: 14),
-      children: [
-        TileLayer(
-          urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          subdomains: ['a', 'b', 'c'],
-        ),
-        MarkerLayer(
-          markers: [
-            Marker(
-              point: _userLocation,
-              width: 50.0,
-              height: 50.0,
-              child: Icon(Icons.location_pin, color: Colors.red, size: 40),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder:
+          (context) => Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 16,
             ),
-          ],
-        ),
-      ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    labelText: title,
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle submission logic
+                    print('$title updated: ${_controller.text}');
+                    Navigator.pop(context); // Close modal
+                  },
+                  child: Text('Save'),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
     );
   }
+
+  /// ✅ Placeholder for Settings
+  void _showPlaceholder(BuildContext context) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("Settings placeholder action")));
+  }
+}
+
+Widget _buildSettingsItem({
+  required IconData icon,
+  required String title,
+  bool isLogout = false,
+  required BuildContext context,
+}) {
+  return InkWell(
+    onTap: () {
+      // Handle tap
+    },
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color:
+                  isLogout
+                      ? Colors.red.withOpacity(0.1)
+                      : Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: isLogout ? Colors.red : Colors.black,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              color: isLogout ? Colors.red : Colors.black,
+            ),
+          ),
+          const Spacer(),
+          Icon(Icons.arrow_forward_ios, size: 15, color: Colors.grey),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildDivider() {
+  return const Divider(
+    height: 1,
+    thickness: 1,
+    indent: 16,
+    endIndent: 16,
+    color: Color(0xFFEEEEEE),
+  );
 }

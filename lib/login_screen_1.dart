@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'login_bloc.dart';
 import 'login_state.dart';
 import 'login_screen_2.dart';
+import 'login_screen.dart';
 
 class LoginScreen1 extends StatefulWidget {
   const LoginScreen1({super.key});
@@ -16,6 +17,13 @@ class _LoginScreen1State extends State<LoginScreen1> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginScreen2()),
+    );
+  }
+
+  void _skipToHome(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -94,7 +102,7 @@ class _LoginScreen1State extends State<LoginScreen1> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
-                      onPressed: () => _navigateToHome(context),
+                      onPressed: () => _skipToHome(context),
                       child: const Text(
                         "skip",
                         style: TextStyle(fontSize: 16, color: Colors.black),

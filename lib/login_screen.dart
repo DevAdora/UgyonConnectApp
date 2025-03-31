@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'main_screen/home_screen.dart';
 import 'register_screen.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,20 +43,39 @@ class _LoginScreenState extends State<LoginScreen> {
         final Map<dynamic, dynamic> usersMap =
             snapshot.value as Map<dynamic, dynamic>;
         bool isAuthenticated = false;
+        String? userId;
+        Map<String, dynamic>? userData;
 
         usersMap.forEach((key, value) {
           if (value['password'] == password) {
             isAuthenticated = true;
+            userId = key; // ✅ Store the User ID
+            userData = Map<String, dynamic>.from(value);
           }
         });
 
-        if (isAuthenticated) {
-          // ✅ Successful login
+        if (isAuthenticated && userId != null) {
+          print("USER DATA STRUCTURE: ${userData.toString()}");
+          userData!.forEach((key, value) {
+            print("FIELD: $key = $value");
+          });
+
+          // Rest of your existing code...
+          // ...
+
+          // ✅ Store the user ID and data locally using SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('userId', userId!);
+          await prefs.setString('userEmail', email);
+          await prefs.setString('userName', userData!['name'] ?? '');
+          await prefs.setString('userPhone', userData!['phone'] ?? '');
+          await prefs.setString('userQRCode', userData!['qrCode'] ?? '');
+
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('Login successful!')));
 
-          // Navigate to HomeScreen
+          // ✅ Navigate to HomeScreen (or UserScreen)
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomeScreen()),
@@ -97,14 +117,14 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              height: MediaQuery.of(context).size.height * 0.20,
-              alignment: Alignment.center, // Centers the image
+              height: MediaQuery.of(context).size.height * 0.17,
+              alignment: Alignment.center,
               child: Image.asset(
                 'assets/images/ugyon_logo.png',
-                height: MediaQuery.of(context).size.height * 0.20,
+                height: MediaQuery.of(context).size.height * 0.17,
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 50),
             SizedBox(
               width:
                   MediaQuery.of(context).size.width *
@@ -134,21 +154,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 15),
+            const SizedBox(height: 30),
+
             Container(
-              alignment: Alignment.centerLeft, // Aligns text to the left
-              child: Text(
+              padding: EdgeInsets.only(bottom: 10), // Bottom padding
+              alignment: Alignment.centerLeft,
+              child: const Text(
                 "Or use your email to login",
                 style: TextStyle(
                   fontSize: 16,
-                  fontFamily: 'Inter',
-                  letterSpacing: -0.424,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF505050),
                 ),
               ),
             ),
-            const SizedBox(height: 15),
             TextField(
               controller: _emailController,
               decoration: InputDecoration(
@@ -171,22 +190,22 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 10),
             Align(
-              alignment: Alignment.centerRight,
+              alignment: Alignment.centerLeft,
               child: TextButton(
                 onPressed: () {},
                 child: const Text(
                   'Forgot password?',
                   style: TextStyle(
-                    color: Color(0XFF9DC468),
+                    color: Color(0XFF505050),
                     decoration: TextDecoration.underline,
-                    decorationColor: Color(0xFF9DC468), // Underline color
-
+                    decorationColor: Color(0xFF505050),
                     fontSize: 16,
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 10),
+
             // 🔥 Login Button with Loading Indicator
             SizedBox(
               width: double.infinity,
@@ -215,11 +234,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextButton(
                   onPressed: () => _navigateToSignup(context),
                   child: const Text(
-                    'Sign in',
+                    'Sign up',
                     style: TextStyle(
-                      color: Color(0xFF9DC468), // Text color
+                      color: Color(0xFF9DC468),
+                      decorationColor: Color(0xFF9DC468),
                       decoration: TextDecoration.underline,
-                      decorationColor: Color(0xFF9DC468), // Underline color
                       fontSize: 16,
                     ),
                   ),

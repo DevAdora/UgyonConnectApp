@@ -24,7 +24,10 @@ dependencies:
   firebase_storage: ^11.6.5   # Storage (optional)
   firebase_database: ^10.4.5
   qr_flutter: ^4.1.0 # For QR code generation
-  
+  shared_preferences: ^2.2.2  # Use the latest version
+  mailer: ^6.0.1
+  fluttertoast: ^8.2.4      # ✅ Optional: For showing success messages
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

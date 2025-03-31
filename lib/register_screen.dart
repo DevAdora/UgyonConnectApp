@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'email_verification.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'dart:typed_data';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:ui' as ui;
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(
-    const MaterialApp(debugShowCheckedModeBanner: false, home: SignupScreen()),
-  );
-}
+import 'email_verification.dart'; // For OTP screen
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -23,11 +22,13 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isPasswordHidden = true;
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
-  // Controllers for input fields
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  // 🔥 Global key for rendering QR code to image
+  final GlobalKey _qrKey = GlobalKey();
 
   Future<void> _registerUser() async {
     if (_nameController.text.isEmpty ||
@@ -41,22 +42,39 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     try {
-      // ✅ Firebase Auth to create a new user
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-            email: _emailController.text,
-            password: _passwordController.text,
-          );
+      // ✅ Generate 6-digit OTP
+      final otp = (Random().nextInt(900000) + 100000).toString();
 
-      // ✅ Send email verification
-      await credential.user?.sendEmailVerification();
+      // ✅ Generate a unique QR code using the user's email
+      final qrData =
+          '${_emailController.text}-${DateTime.now().millisecondsSinceEpoch}';
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Verification email sent!')));
+      // ✅ Store user data in Firebase Realtime Database
+      final newUserRef = _dbRef.child('users').push();
+      await newUserRef.set({
+        'createdAt': DateTime.now().toIso8601String(),
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'phone': _phoneController.text,
+        'password':
+            _passwordController.text, // Store hashed password in production
+        'otp': otp,
+        'qrCode': qrData, // ✅ Store the QR code data
+      });
 
-      // ✅ Navigate to the OTP screen with email
-      Navigator.pushReplacement(
+      // ✅ Save user data locally
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userId', newUserRef.key ?? '');
+      await prefs.setString('userName', _nameController.text);
+      await prefs.setString('userEmail', _emailController.text);
+      await prefs.setString('userPhone', _phoneController.text);
+      await prefs.setString('userPassword', _passwordController.text);
+      await prefs.setString('userQRCode', qrData);
+
+      Fluttertoast.showToast(msg: "User registered successfully!");
+
+      // ✅ Navigate to OTP screen with email & OTP
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => OtpScreen(email: _emailController.text),
@@ -66,6 +84,22 @@ class _SignupScreenState extends State<SignupScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  // 🔥 Function to render QR code to an image and convert to bytes
+  Future<Uint8List?> _captureQrCode() async {
+    try {
+      RenderRepaintBoundary boundary =
+          _qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      return byteData?.buffer.asUint8List();
+    } catch (e) {
+      print('❌ Error capturing QR code: $e');
+      return null;
     }
   }
 
@@ -84,7 +118,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   children: [
                     const Text(
                       "Get Started",
-                      textAlign: TextAlign.left,
                       style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
@@ -94,7 +127,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(height: 10),
                     const Text(
                       "Create your account to start earning rewards!",
-                      textAlign: TextAlign.left,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w500,
@@ -131,32 +163,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text.rich(
-                      TextSpan(
-                        text: "By signing up, you agree to our ",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF505050),
-                        ),
-                        children: [
-                          TextSpan(
-                            text: "Terms & Conditions",
-                            style: TextStyle(
-                              color: Color(0xFF9DC468),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          TextSpan(text: " and "),
-                          TextSpan(
-                            text: "Privacy Policy",
-                            style: TextStyle(
-                              color: Color(0xFF9DC468),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                    RepaintBoundary(
+                      key: _qrKey,
+                      child: QrImageView(
+                        data: _emailController.text, // Use email as the QR data
+                        version: QrVersions.auto,
+                        size: 200.0,
+                        backgroundColor: Colors.white,
+                        errorCorrectionLevel: QrErrorCorrectLevel.M,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
@@ -214,11 +229,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           : Icons.visibility,
                       color: Colors.black54,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordHidden = !_isPasswordHidden;
-                      });
-                    },
+                    onPressed:
+                        () => setState(
+                          () => _isPasswordHidden = !_isPasswordHidden,
+                        ),
                   )
                   : Icon(icon, color: Colors.black54),
         ),
