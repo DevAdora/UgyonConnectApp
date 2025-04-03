@@ -37,7 +37,7 @@ Future<void> main() async {
       home: Scaffold(
         body: Center(
           child: Text(
-            'Error initializing app. Please restart.',
+             'Error initializing app. Please restart.',
             style: TextStyle(fontSize: 18, color: Colors.red),
           ),
         ),

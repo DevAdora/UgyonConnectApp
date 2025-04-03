@@ -8,8 +8,18 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:ui' as ui;
-
+import 'package:ugyon/reg_successful.dart';
+import 'splash_screen.dart';
 import 'email_verification.dart'; // For OTP screen
+
+void _navigateRegSuccess(BuildContext context) {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => SplashScreen(nextScreen: SuccessScreen()),
+    ),
+  );
+}
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -77,7 +87,7 @@ class _SignupScreenState extends State<SignupScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => OtpScreen(email: _emailController.text),
+          builder: (context) => SplashScreen(nextScreen: SuccessScreen()),
         ),
       );
     } catch (e) {
@@ -163,16 +173,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    RepaintBoundary(
-                      key: _qrKey,
-                      child: QrImageView(
-                        data: _emailController.text, // Use email as the QR data
-                        version: QrVersions.auto,
-                        size: 200.0,
-                        backgroundColor: Colors.white,
-                        errorCorrectionLevel: QrErrorCorrectLevel.M,
-                      ),
-                    ),
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,

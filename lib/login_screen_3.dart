@@ -52,7 +52,7 @@ void _navigateToHome(BuildContext context) {
 
                   
              Transform.translate(
-                offset: const Offset(30, 0), // Moves right by 20 pixels
+                offset: const Offset(80, 0), // Moves right by 20 pixels
                 child: Image.asset(
                   'assets/images/ugyon_thirdscreen_image.png',
                   width: 500,
@@ -77,7 +77,7 @@ void _navigateToHome(BuildContext context) {
 
                 // 🔹 Subtitle
                 const Text(
-                  "Recylce today, change tomorrow!",
+                  "Recycle today, change tomorrow!",
                   style: TextStyle(fontSize: 20, color: Colors.grey),
                   textAlign: TextAlign.left,
                 ),

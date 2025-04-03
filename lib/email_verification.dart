@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart'; // For OTP input
 import 'number_verification.dart'; // Import the next screen
+import 'splash_screen.dart';
+import 'package:ugyon/reg_successful.dart';
 
 class OtpScreen extends StatefulWidget {
   final String email; // ✅ Add the email parameter
@@ -14,6 +16,15 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   int _resendTime = 30; // Countdown for resend OTP
   late final TextEditingController _otpController;
+
+  void _navigateRegSuccess(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SplashScreen(nextScreen: SuccessScreen()),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -96,14 +107,8 @@ class _OtpScreenState extends State<OtpScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NumScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: () => _navigateRegSuccess(context),
+
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8BC34A),
                     foregroundColor: Colors.white,

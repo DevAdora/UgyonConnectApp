@@ -1,6 +1,31 @@
 {
   "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
     "firebase": "^11.5.0",
     "nodemailer": "^6.10.0"
-  }
+  },
+  "name": "ugyonconnectapp",
+  "version": "1.0.0",
+  "description": "_A social media platform with bartering, QR integration, marketplace, and job listings._",
+  "main": "firebaseConfig.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevAdora/UgyonConnectApp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DevAdora/UgyonConnectApp/issues"
+  },
+  "homepage": "https://github.com/DevAdora/UgyonConnectApp#readme"
 }

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'main_screen/home_screen.dart';
-
+import 'login_screen.dart';
 void main() {
   runApp(
     const MaterialApp(debugShowCheckedModeBanner: false, home: SuccessScreen()),
   );
 }
 
-void _navigateToMain(BuildContext context) {
+void _navigateToLogin(BuildContext context) {
   Navigator.pushReplacement(
     context,
-    MaterialPageRoute(builder: (context) => HomeScreen()),
+    MaterialPageRoute(builder: (context) => LoginScreen()),
   );
 }
 
@@ -51,7 +50,7 @@ class SuccessScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => _navigateToMain(context),
+                    onPressed: () => _navigateToLogin(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9DC468),
                       foregroundColor: Colors.white,
@@ -61,7 +60,7 @@ class SuccessScreen extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      "Continue to Ugyon",
+                      "Login to your account",
                       style: TextStyle(fontSize: 18),
                     ),
                   ),

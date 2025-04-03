@@ -47,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
           },
           child: Center(
             child: Image.asset(
-              'assets/images/ugyon_logo.png',
+              'assets/images/splash_screen.png',
               width: 150,
             ),
           ),
