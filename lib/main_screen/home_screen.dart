@@ -6,6 +6,7 @@ import '../login_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'qr_screen.dart';
+import 'dart:developer' as developer;
 
 void main() {
   runApp(MyApp());
@@ -39,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
 
-  Map<String, dynamic>? _userData;
   bool _isLoading = true;
 
   @override
@@ -62,7 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // Create pages list inside build to pass the current user data
     final List<Widget> _pages = [
-      HomePage(userName: _userName), // Corrected _userName here
+      HomePage(
+        userName: _userName,
+        userId: _userId,
+      ), // Corrected _userName here
       ShopPage(),
       QRScreen(userName: _userName, userId: _userId, userEmail: _userEmail),
       TransactionPage(),
@@ -214,17 +217,94 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   final String userName;
+  final String userId;
 
-  const HomePage({super.key, required this.userName});
+  const HomePage({super.key, required this.userName, required this.userId});
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isLoading = true;
+  double _totalPoints = 0.0;
+  double _totalCO2 = 0.0;
+  int _totalBottles = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTransactionData();
+  }
+
+  // Fetch transaction data from Firebase
+  Future<void> _fetchTransactionData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      print("Fetching transactions for user: ${widget.userId}");
+
+      final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+      DatabaseReference transactionsRef = _dbRef
+          .child('transactions')
+          .child(widget.userId);
+      final snapshot = await transactionsRef.get();
+
+      if (snapshot.exists) {
+        double points = 0.0;
+        int bottles = 0;
+
+        Map<dynamic, dynamic> transactionsMap =
+            snapshot.value as Map<dynamic, dynamic>;
+
+        transactionsMap.forEach((txnId, transaction) {
+          if (transaction is Map<dynamic, dynamic>) {
+            int small = transaction["small"] ?? 0;
+            int medium = transaction["medium"] ?? 0;
+            int large = transaction["large"] ?? 0;
+            double txnPoints =
+                double.tryParse(transaction["points"]?.toString() ?? "0") ??
+                0.0;
+
+            bottles += small + medium + large;
+            points += txnPoints;
+          }
+        });
+
+        setState(() {
+          _totalPoints = points;
+          _totalBottles = bottles;
+          _totalCO2 = bottles * 0.02; // Example CO₂ calculation
+          _isLoading = false;
+        });
+
+        print("Transaction data fetched successfully");
+        print("Total Points: $_totalPoints");
+        print("Total CO2 Saved: $_totalCO2");
+        print("Total Bottles: $_totalBottles");
+      } else {
+        print("No transactions found for this user");
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching transaction data: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-
         elevation: 0,
         title: Row(
           children: [
@@ -252,7 +332,7 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text: _firstName, // Using the passed userName
+                    text: _getFirstName(),
                     style: const TextStyle(
                       color: Color(0xFF9DC468),
                       fontFamily: 'Inter',
@@ -272,27 +352,37 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
-          top: 20,
-          left: 16,
-          right: 16,
-          bottom: 16,
-        ), // Top padding added here
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStatsSection(),
-            const SizedBox(height: 30),
-            _buildCard(),
-            const SizedBox(height: 30),
-            _buildRewardsSection(),
-            const SizedBox(height: 30),
-            HelpSection(),
-          ],
-        ),
-      ),
+      body:
+          _isLoading
+              ? Center(
+                child: CircularProgressIndicator(color: Color(0xFF9DC468)),
+              )
+              : SingleChildScrollView(
+                padding: const EdgeInsets.only(
+                  top: 20,
+                  left: 16,
+                  right: 16,
+                  bottom: 16,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStatsSection(),
+                    const SizedBox(height: 30),
+                    _buildCard(),
+                    const SizedBox(height: 30),
+                    _buildRewardsSection(),
+                    const SizedBox(height: 30),
+                    HelpSection(),
+                  ],
+                ),
+              ),
     );
+  }
+
+  // Helper to get first name
+  String _getFirstName() {
+    return widget.userName.isEmpty ? "User" : widget.userName.split(' ').first;
   }
 
   Widget _buildStatsSection() {
@@ -305,9 +395,9 @@ class HomePage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildStatItem("My Points", "50.2"),
-          _buildStatItem("Saved CO₂", "50.2g"),
-          _buildStatItem("Recycled bottle", "50.2"),
+          _buildStatItem("My Points", "${_totalPoints.toStringAsFixed(1)}"),
+          _buildStatItem("Saved CO₂", "${_totalCO2.toStringAsFixed(1)}g"),
+          _buildStatItem("Recycled Bottles", "$_totalBottles"),
         ],
       ),
     );
@@ -338,6 +428,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  // The rest of your original code for _buildCard(), _buildCardStation(), etc.
   Widget _buildCard() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -517,6 +608,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
+// Keep the HelpSection as is
 class HelpSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -553,14 +645,10 @@ class HelpSection extends StatelessWidget {
     );
   }
 
-  /// **🔹 Build Help List Item**
   Widget _buildHelpItem(IconData icon, String title) {
     return ListTile(
       leading: Icon(icon, color: Color(0xFF9DC468)),
       title: Text(title, style: const TextStyle(fontSize: 14)),
-      onTap: () {
-        // Handle help item tap (navigate or show details)
-      },
     );
   }
 }

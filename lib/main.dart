@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'login_bloc.dart';
 import 'splash_screen.dart';
 import 'login_screen_1.dart';
-import 'firebase_options.dart'; 
+import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,9 +21,7 @@ Future<void> main() async {
 
     runApp(
       MultiBlocProvider(
-        providers: [
-          BlocProvider(create: (context) => LoginBloc()),
-        ],
+        providers: [BlocProvider(create: (context) => LoginBloc())],
         child: const MyApp(),
       ),
     );
@@ -32,17 +30,19 @@ Future<void> main() async {
     debugPrint('Initialization error: $e');
     debugPrint('StackTrace: $stackTrace');
 
-    runApp(MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Center(
-          child: Text(
-             'Error initializing app. Please restart.',
-            style: TextStyle(fontSize: 18, color: Colors.red),
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          body: Center(
+            child: Text(
+              'Error initializing app. Please restart.',
+              style: TextStyle(fontSize: 18, color: Colors.red),
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -53,9 +53,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const SplashScreen(
-        nextScreen: LoginScreen1(),
-      ),
+      home: const SplashScreen(nextScreen: LoginScreen1()),
     );
   }
 }
