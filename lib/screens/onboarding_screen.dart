@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ugyon/screens/login_page.dart';
-import 'package:ugyon/screens/signup_page.dart';
+import 'package:ugyon/screens/login_screen.dart';
+import 'package:ugyon/screens/signup_screen.dart';
 import 'package:ugyon/theme/app_colors.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -36,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_currentPage == pages.length - 1) {
       Navigator.of(
         context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
     } else {
       _controller.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -136,11 +136,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPressed: () {
                       if (_currentPage == pages.length - 1) {
                         Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const SignUpPage()),
+                          MaterialPageRoute(
+                            builder: (_) => const SignUpScreen(),
+                          ),
                         );
                       } else {
                         Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
                         );
                       }
                     },
