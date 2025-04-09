@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "720266418647",
+    "project_id": "ugyon-d1947",
+    "storage_bucket": "ugyon-d1947.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:720266418647:android:0556cfe9c76d65c58f1392",
+        "android_client_info": {
+          "package_name": "com.example.ugyon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjt119l-9hrpfihYvex9RngY7zi0W8eNM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
